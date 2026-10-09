@@ -8,6 +8,7 @@ interface DispatchManifestProps {
   solverName: string;
   hoveredRouteId?: string | null;
   onHoverRoute?: (routeId: string | null) => void;
+  onSelectRoute?: (route: RouteDetail) => void;
 }
 
 type SortField = 'path' | 'stage' | 'tons' | 'distance' | 'freshness' | 'spoilage' | 'cost' | 'co2';
@@ -17,7 +18,8 @@ export const DispatchManifest: React.FC<DispatchManifestProps> = ({
   routes,
   solverName,
   hoveredRouteId,
-  onHoverRoute
+  onHoverRoute,
+  onSelectRoute
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [produceFilter, setProduceFilter] = useState<string>('all');
@@ -302,9 +304,11 @@ export const DispatchManifest: React.FC<DispatchManifestProps> = ({
                 return (
                   <tr
                     key={idx}
+                    onClick={() => onSelectRoute && onSelectRoute(route)}
                     onMouseEnter={() => onHoverRoute && onHoverRoute(route.edge_id)}
                     onMouseLeave={() => onHoverRoute && onHoverRoute(null)}
                     className={`transition-all cursor-pointer ${rowHighlight}`}
+                    title="Click to view and trace route on the Interactive Map"
                   >
                     <td className="p-3.5 font-bold text-[#1C2026]">
                       {route.source} → {route.target}

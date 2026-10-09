@@ -7,7 +7,7 @@ import { BenchmarkCharts } from './components/BenchmarkCharts';
 import { DisruptionSimulator } from './components/DisruptionSimulator';
 import { DispatchManifest } from './components/DispatchManifest';
 import { FALLBACK_DATASETS, runStandaloneOptimization, generateAllRoutes } from './StandaloneQuantumEngine';
-import type { Dataset, OptimizationResponse, SolverResult } from './types';
+import type { Dataset, OptimizationResponse, SolverResult, Node as NetworkNode, RouteDetail } from './types';
 import { Map, Layers, Cpu, TrendingUp, Truck, DollarSign, Leaf, ShieldCheck, Activity } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -117,6 +117,52 @@ export const App: React.FC = () => {
         setOptimizationStep(0);
       }, 250);
     }, 600);
+  };
+
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+
+  const handleAddCustomNode = (newNode: NetworkNode) => {
+    setDatasets(prev => {
+      const currentDs = prev[selectedDatasetId] || FALLBACK_DATASETS.california_central_valley;
+      const updatedNodes = [...currentDs.nodes, newNode];
+      const updatedDataset: Dataset = {
+        ...currentDs,
+        nodes: updatedNodes
+      };
+
+      // Recalculate standalone optimization immediately for instant interactive feedback
+      const optResult = runStandaloneOptimization(updatedDataset, disruptionParams);
+      setOptimizationData(optResult);
+
+      return {
+        ...prev,
+        [selectedDatasetId]: updatedDataset
+      };
+    });
+  };
+
+  const handleRemoveCustomNode = (nodeId: string) => {
+    setDatasets(prev => {
+      const currentDs = prev[selectedDatasetId] || FALLBACK_DATASETS.california_central_valley;
+      const updatedNodes = currentDs.nodes.filter(n => n.id !== nodeId);
+      const updatedDataset: Dataset = {
+        ...currentDs,
+        nodes: updatedNodes
+      };
+
+      const optResult = runStandaloneOptimization(updatedDataset, disruptionParams);
+      setOptimizationData(optResult);
+
+      return {
+        ...prev,
+        [selectedDatasetId]: updatedDataset
+      };
+    });
+  };
+
+  const handleSelectRouteFromManifest = (route: RouteDetail) => {
+    setHoveredRouteId(route.edge_id);
+    setActiveTab('map');
   };
 
   const currentDataset = datasets[selectedDatasetId] || FALLBACK_DATASETS.california_central_valley;
@@ -414,8 +460,12 @@ export const App: React.FC = () => {
                 nodes={currentDataset.nodes}
                 activeRoutes={activeRoutes}
                 beforeRoutes={beforeRoutes}
+                selectedNodeId={selectedNodeId}
+                onSelectNode={setSelectedNodeId}
                 hoveredRouteId={hoveredRouteId}
                 onHoverRoute={setHoveredRouteId}
+                onAddCustomNode={handleAddCustomNode}
+                onRemoveCustomNode={handleRemoveCustomNode}
               />
               <DisruptionSimulator
                 params={disruptionParams}
@@ -447,6 +497,7 @@ export const App: React.FC = () => {
               solverName={activeSolverName}
               hoveredRouteId={hoveredRouteId}
               onHoverRoute={setHoveredRouteId}
+              onSelectRoute={handleSelectRouteFromManifest}
             />
           )}
         </div>

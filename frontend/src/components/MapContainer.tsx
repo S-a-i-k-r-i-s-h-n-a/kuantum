@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import type { Node, RouteDetail } from '../types';
-import { Truck, Crosshair, Zap, AlertTriangle } from 'lucide-react';
+import { Truck, Crosshair, Zap, AlertTriangle, Plus, MapPin, X, Trash2 } from 'lucide-react';
 
 interface MapViewProps {
   nodes: Node[];
@@ -12,6 +12,8 @@ interface MapViewProps {
   onSelectNode?: (nodeId: string) => void;
   hoveredRouteId?: string | null;
   onHoverRoute?: (routeId: string | null) => void;
+  onAddCustomNode?: (node: Node) => void;
+  onRemoveCustomNode?: (nodeId: string) => void;
 }
 
 type BasemapStyle = 'voyager' | 'positron' | 'dark' | 'satellite';
@@ -75,22 +77,28 @@ const createCustomIcon = (type: 'farm' | 'hub' | 'market', label: string, produc
   });
 };
 
-const createMovingTruckIcon = (produceIcon: string, isHighlighted: boolean) => {
+const createMovingTruckIcon = (produceIcon: string, isHighlighted: boolean, tons?: number) => {
   const highlightClass = isHighlighted 
-    ? 'ring-4 ring-amber-400 scale-125 bg-amber-400 text-slate-950' 
+    ? 'ring-4 ring-amber-400 scale-125 bg-amber-400 text-slate-950 shadow-[0_0_15px_rgba(251,191,36,0.8)]' 
     : 'bg-[#1C2026] text-[#E2DED6]';
 
   const html = `
-    <div class="flex items-center justify-center w-7 h-7 rounded-xl ${highlightClass} border border-white/80 shadow-[0_4px_10px_rgba(0,0,0,0.35)] transition-all">
-      <span class="text-xs">${produceIcon || '🚚'}</span>
+    <div class="relative flex items-center justify-center w-8 h-8 rounded-xl ${highlightClass} border-2 border-white/90 shadow-[0_4px_12px_rgba(0,0,0,0.4)] transition-all">
+      <span class="text-sm drop-shadow">${produceIcon || '🚚'}</span>
+      <div class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-400 border border-white truck-pulse"></div>
+      ${isHighlighted && tons ? `
+        <div class="absolute -top-6 whitespace-nowrap bg-black/90 text-amber-300 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shadow">
+          ${tons}T
+        </div>
+      ` : ''}
     </div>
   `;
 
   return L.divIcon({
     html,
     className: 'custom-leaflet-truck',
-    iconSize: [28, 28],
-    iconAnchor: [14, 14]
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
   });
 };
 
@@ -118,6 +126,20 @@ const MapRecenter: React.FC<{ nodes: Node[]; triggerRecenterCount: number }> = (
   return null;
 };
 
+const MapClickHandler: React.FC<{
+  isAddMode: boolean;
+  onMapClick: (lat: number, lng: number) => void;
+}> = ({ isAddMode, onMapClick }) => {
+  useMapEvents({
+    click: (e) => {
+      if (isAddMode) {
+        onMapClick(e.latlng.lat, e.latlng.lng);
+      }
+    }
+  });
+  return null;
+};
+
 export const LogisticsMap: React.FC<MapViewProps> = ({
   nodes,
   activeRoutes,
@@ -125,26 +147,61 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
   selectedNodeId,
   onSelectNode,
   hoveredRouteId,
-  onHoverRoute
+  onHoverRoute,
+  onAddCustomNode,
+  onRemoveCustomNode
 }) => {
   const [basemap, setBasemap] = useState<BasemapStyle>('voyager');
   const [stageFilter, setStageFilter] = useState<'all' | 'farm_to_hub' | 'hub_to_market' | 'direct_farm_market'>('all');
   const [recenterCount, setRecenterCount] = useState<number>(0);
   const [truckProgress, setTruckProgress] = useState<number>(0);
   const [showBefore, setShowBefore] = useState<boolean>(false);
+  const [isAddMode, setIsAddMode] = useState<boolean>(false);
+  const [animationSpeed, setAnimationSpeed] = useState<'normal' | 'fast' | 'slow'>('normal');
+  const [pendingNodeCoords, setPendingNodeCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [newNodeType, setNewNodeType] = useState<'farm' | 'hub' | 'market'>('farm');
+  const [newNodeName, setNewNodeName] = useState<string>('');
+  const [newNodeProduce, setNewNodeProduce] = useState<string>('berries');
+  const [newNodeCapacity, setNewNodeCapacity] = useState<number>(10);
 
   const nodeMap = new Map<string, Node>(nodes.map(n => [n.id, n]));
 
   const centerLat = nodes.length > 0 ? nodes.reduce((sum, n) => sum + n.lat, 0) / nodes.length : 36.7;
   const centerLng = nodes.length > 0 ? nodes.reduce((sum, n) => sum + n.lng, 0) / nodes.length : -119.8;
 
-  // Animation ticker for moving trucks along routes
+  // Animation ticker for moving trucks along routes with adjustable speed
   useEffect(() => {
+    const step = animationSpeed === 'fast' ? 0.04 : animationSpeed === 'slow' ? 0.012 : 0.024;
+    const intervalTime = animationSpeed === 'fast' ? 60 : animationSpeed === 'slow' ? 140 : 90;
+
     const interval = setInterval(() => {
-      setTruckProgress((prev) => (prev >= 1 ? 0.05 : prev + 0.025));
-    }, 120);
+      setTruckProgress((prev) => (prev >= 1 ? 0.02 : prev + step));
+    }, intervalTime);
     return () => clearInterval(interval);
-  }, []);
+  }, [animationSpeed]);
+
+  const handleMapClick = (lat: number, lng: number) => {
+    setPendingNodeCoords({ lat: Number(lat.toFixed(4)), lng: Number(lng.toFixed(4)) });
+    setNewNodeName(`Custom ${newNodeType === 'farm' ? 'Farm' : newNodeType === 'hub' ? 'Cold Hub' : 'Market'} ${nodes.length + 1}`);
+  };
+
+  const handleConfirmAddNode = () => {
+    if (!pendingNodeCoords || !onAddCustomNode) return;
+    const customId = `custom_${Date.now()}`;
+    const newNode: Node = {
+      id: customId,
+      name: newNodeName.trim() || `Node ${nodes.length + 1}`,
+      type: newNodeType,
+      lat: pendingNodeCoords.lat,
+      lng: pendingNodeCoords.lng,
+      ...(newNodeType === 'farm' ? { supply_tons: newNodeCapacity, produce: newNodeProduce } : {}),
+      ...(newNodeType === 'hub' ? { capacity_tons: newNodeCapacity, temp_c: 2.0 } : {}),
+      ...(newNodeType === 'market' ? { demand_tons: newNodeCapacity } : {})
+    };
+    onAddCustomNode(newNode);
+    setPendingNodeCoords(null);
+    setIsAddMode(false);
+  };
 
   const filteredRoutes = stageFilter === 'all'
     ? activeRoutes
@@ -220,15 +277,52 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
         )}
       </div>
 
-      {/* Top Right: Recenter Button + Basemap Selector */}
-      <div className="absolute top-4 right-4 z-[1000] flex items-center space-x-2">
+      {/* Top Right: Add Node Mode + Speed Selector + Recenter + Basemap */}
+      <div className="absolute top-4 right-4 z-[1000] flex flex-wrap items-center justify-end gap-2">
+        {/* Drop Custom Node Trigger Button */}
+        {onAddCustomNode && (
+          <button
+            onClick={() => {
+              setIsAddMode(!isAddMode);
+              setPendingNodeCoords(null);
+            }}
+            className={`flex items-center space-x-1.5 px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer transition-all shadow-md ${
+              isAddMode
+                ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300 font-extrabold animate-pulse'
+                : 'btn-depth-secondary text-[#1C2026]'
+            }`}
+            title="Click to drop a custom farm, cold hub, or market on the map"
+          >
+            <Plus className="w-4 h-4" />
+            <span>{isAddMode ? 'Click Map to Place' : 'Add Node'}</span>
+          </button>
+        )}
+
+        {/* Animation Speed Toggle */}
+        <div className="bg-white/95 backdrop-blur-md p-1 rounded-2xl border border-[#D0C9BD] shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center text-[11px] font-bold">
+          <span className="px-2 text-[#7A8492] hidden sm:inline">Speed:</span>
+          {(['slow', 'normal', 'fast'] as const).map(speed => (
+            <button
+              key={speed}
+              onClick={() => setAnimationSpeed(speed)}
+              className={`px-2 py-1 rounded-xl capitalize transition-all cursor-pointer ${
+                animationSpeed === speed
+                  ? 'btn-depth-primary text-white shadow-sm'
+                  : 'text-[#5C6470] hover:text-[#1C2026]'
+              }`}
+            >
+              {speed}
+            </button>
+          ))}
+        </div>
+
         <button
           onClick={() => setRecenterCount(c => c + 1)}
           className="btn-depth-secondary flex items-center space-x-1.5 px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
           title="Recenter Map View on Nodes"
         >
           <Crosshair className="w-4 h-4 text-[#1C2026]" />
-          <span>Recenter Map</span>
+          <span>Recenter</span>
         </button>
 
         <div className="bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border border-[#D0C9BD] shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center space-x-1">
@@ -247,6 +341,105 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Interactive Modal / Popover when user clicks on map in Add Mode */}
+      {pendingNodeCoords && (
+        <div className="absolute top-20 right-4 z-[1050] w-80 bg-white/98 backdrop-blur-lg rounded-3xl p-5 border-2 border-amber-400 shadow-[0_16px_36px_rgba(0,0,0,0.22)] animate-in fade-in slide-in-from-top-4 duration-200">
+          <div className="flex items-center justify-between pb-3 border-b border-[#E2DED6] mb-3">
+            <div className="flex items-center space-x-2">
+              <MapPin className="w-5 h-5 text-amber-600" />
+              <h4 className="font-black text-sm text-[#1C2026]">Add Network Facility</h4>
+            </div>
+            <button
+              onClick={() => setPendingNodeCoords(null)}
+              className="text-[#7A8492] hover:text-[#1C2026] p-1 rounded-lg hover:bg-slate-100"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-3 text-xs">
+            <div>
+              <label className="text-[11px] font-bold text-[#5C6470] block mb-1">Facility Name</label>
+              <input
+                type="text"
+                value={newNodeName}
+                onChange={(e) => setNewNodeName(e.target.value)}
+                className="w-full px-3 py-1.5 rounded-xl border border-[#D0C9BD] font-medium text-[#1C2026] focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-[11px] font-bold text-[#5C6470] block mb-1">Facility Role</label>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(['farm', 'hub', 'market'] as const).map(type => (
+                  <button
+                    key={type}
+                    onClick={() => setNewNodeType(type)}
+                    className={`py-1.5 rounded-xl font-extrabold capitalize text-xs border transition-all cursor-pointer ${
+                      newNodeType === type
+                        ? 'bg-[#1C2026] text-white border-[#1C2026] shadow-sm'
+                        : 'bg-[#F5F3EF] text-[#5C6470] border-[#D0C9BD] hover:bg-white'
+                    }`}
+                  >
+                    {type === 'farm' ? '🌱 Farm' : type === 'hub' ? '🧊 Hub' : '🛒 Market'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {newNodeType === 'farm' && (
+              <div>
+                <label className="text-[11px] font-bold text-[#5C6470] block mb-1">Primary Crop</label>
+                <select
+                  value={newNodeProduce}
+                  onChange={(e) => setNewNodeProduce(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-xl border border-[#D0C9BD] font-medium text-[#1C2026] focus:outline-none"
+                >
+                  <option value="berries">🍓 Strawberries</option>
+                  <option value="tomatoes">🍅 Tomatoes</option>
+                  <option value="leafy_greens">🥬 Leafy Greens</option>
+                  <option value="avocados">🥑 Avocados</option>
+                  <option value="dairy">🥛 Fresh Dairy</option>
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="text-[11px] font-bold text-[#5C6470] block mb-1">
+                {newNodeType === 'farm' ? 'Daily Yield (Tons)' : newNodeType === 'hub' ? 'Cold Storage Capacity (Tons)' : 'Daily Demand (Tons)'}
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={newNodeCapacity}
+                onChange={(e) => setNewNodeCapacity(Number(e.target.value))}
+                className="w-full px-3 py-1.5 rounded-xl border border-[#D0C9BD] font-medium text-[#1C2026] focus:outline-none"
+              />
+            </div>
+
+            <div className="pt-2 text-[10px] text-[#7A8492] flex justify-between">
+              <span>GPS: {pendingNodeCoords.lat}, {pendingNodeCoords.lng}</span>
+            </div>
+
+            <div className="flex items-center space-x-2 pt-2">
+              <button
+                onClick={() => setPendingNodeCoords(null)}
+                className="w-1/2 py-2 rounded-xl font-bold btn-depth-secondary text-xs cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAddNode}
+                className="w-1/2 py-2 rounded-xl font-extrabold bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs shadow-md cursor-pointer transition-all"
+              >
+                Insert & Optimize
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Centre: Before / After Optimization Toggle */}
       {beforeRoutes.length > 0 && (
@@ -308,6 +501,7 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
         scrollWheelZoom={true}
       >
         <MapRecenter nodes={nodes} triggerRecenterCount={recenterCount} />
+        <MapClickHandler isAddMode={isAddMode} onMapClick={handleMapClick} />
         
         <TileLayer
           key={basemap}
@@ -431,7 +625,7 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
               {!showBefore && (
                 <Marker
                   position={[truckLat, truckLng]}
-                  icon={createMovingTruckIcon(route.produce_icon, isHighlighted)}
+                  icon={createMovingTruckIcon(route.produce_icon, isHighlighted, route.tons)}
                   interactive={false}
                 />
               )}
@@ -443,6 +637,7 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
         {nodes.map((node) => {
           const produceIcon = node.produce === 'berries' ? '🍓' : node.produce === 'dairy' ? '🥛' : node.produce === 'leafy_greens' ? '🥬' : node.produce === 'avocados' ? '🥑' : '🍅';
           const isSelected = selectedNodeId === node.id;
+          const isCustomNode = node.id.startsWith('custom_');
           
           return (
             <Marker
@@ -455,9 +650,23 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
             >
               <Popup>
                 <div className="p-2 text-xs text-[#1C2026] font-sans min-w-[200px]">
-                  <div className="font-extrabold text-sm text-[#1C2026] flex items-center space-x-1.5 border-b border-[#E2DED6] pb-1.5 mb-2">
-                    <span className="text-base">{node.type === 'farm' ? '🌱' : node.type === 'hub' ? '🧊' : '🛒'}</span>
-                    <span>{node.name}</span>
+                  <div className="font-extrabold text-sm text-[#1C2026] flex items-center justify-between border-b border-[#E2DED6] pb-1.5 mb-2">
+                    <span className="flex items-center space-x-1.5">
+                      <span className="text-base">{node.type === 'farm' ? '🌱' : node.type === 'hub' ? '🧊' : '🛒'}</span>
+                      <span>{node.name}</span>
+                    </span>
+                    {isCustomNode && onRemoveCustomNode && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemoveCustomNode(node.id);
+                        }}
+                        className="text-rose-600 hover:text-rose-800 p-1 hover:bg-rose-50 rounded"
+                        title="Remove custom node"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                   <div className="space-y-1 text-[#4A5568]">
                     <div className="flex justify-between">
