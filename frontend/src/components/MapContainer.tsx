@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
 import L from 'leaflet';
 import type { Node, RouteDetail } from '../types';
 import { Truck, Crosshair, Zap, AlertTriangle, Plus, MapPin, X, Trash2 } from 'lucide-react';
@@ -221,124 +221,130 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
   return (
     <div className="relative w-full h-[520px] lg:h-[640px] rounded-3xl overflow-hidden border border-[#D0C9BD] shadow-[0_12px_30px_rgba(0,0,0,0.1)] bg-[#E2DED6]">
       
-      {/* Top Left: Interactive Legend with Stage Filters */}
-      <div className="absolute top-4 left-4 z-[1000] bg-white/95 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-[#D0C9BD] shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex flex-wrap items-center gap-2 text-xs">
-        <button
-          onClick={() => setStageFilter(stageFilter === 'farm_to_hub' ? 'all' : 'farm_to_hub')}
-          className={`flex items-center space-x-1.5 font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-            stageFilter === 'farm_to_hub'
-              ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm'
-              : 'text-emerald-800 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
-          }`}
-          title="Filter Farm-to-Hub routes only"
-        >
-          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-          <span>Farms ({nodes.filter(n => n.type === 'farm').length})</span>
-        </button>
-
-        <button
-          onClick={() => setStageFilter(stageFilter === 'hub_to_market' ? 'all' : 'hub_to_market')}
-          className={`flex items-center space-x-1.5 font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-            stageFilter === 'hub_to_market'
-              ? 'bg-cyan-600 text-white border-cyan-700 shadow-sm'
-              : 'text-cyan-800 bg-cyan-50 border-cyan-200 hover:bg-cyan-100'
-          }`}
-          title="Filter Hub-to-Market routes only"
-        >
-          <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
-          <span>Cold Hubs ({nodes.filter(n => n.type === 'hub').length})</span>
-        </button>
-
-        <button
-          onClick={() => setStageFilter(stageFilter === 'direct_farm_market' ? 'all' : 'direct_farm_market')}
-          className={`flex items-center space-x-1.5 font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
-            stageFilter === 'direct_farm_market'
-              ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
-              : 'text-amber-800 bg-amber-50 border-amber-200 hover:bg-amber-100'
-          }`}
-          title="Filter Direct Farm-to-Market routes only"
-        >
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-          <span>Direct ({nodes.filter(n => n.type === 'market').length})</span>
-        </button>
+      {/* Unified Single-Line Top Controls Ribbon */}
+      <div className="absolute top-3 left-3 right-3 z-[1000] flex items-center justify-between gap-2 pointer-events-none">
         
-        <div className="border-l border-[#D0C9BD] pl-2 flex items-center space-x-1.5 text-[#1C2026] font-bold">
-          <Truck className="w-3.5 h-3.5 text-[#1C2026]" />
-          <span>Showing: {filteredRoutes.length}/{activeRoutes.length}</span>
-        </div>
-
-        {stageFilter !== 'all' && (
+        {/* Left Section: Stage Filter Badges */}
+        <div className="bg-white/95 backdrop-blur-md px-2.5 py-1.5 rounded-2xl border border-[#D0C9BD] shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center gap-1.5 text-xs pointer-events-auto overflow-x-auto max-w-fit">
           <button
-            onClick={() => setStageFilter('all')}
-            className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#E2DED6] text-[#1C2026] border border-[#BCB4A4] hover:bg-[#D6D0C5] transition-all cursor-pointer"
-          >
-            Reset
-          </button>
-        )}
-      </div>
-
-      {/* Top Right: Add Node Mode + Speed Selector + Recenter + Basemap */}
-      <div className="absolute top-4 right-4 z-[1000] flex flex-wrap items-center justify-end gap-2">
-        {/* Drop Custom Node Trigger Button */}
-        {onAddCustomNode && (
-          <button
-            onClick={() => {
-              setIsAddMode(!isAddMode);
-              setPendingNodeCoords(null);
-            }}
-            className={`flex items-center space-x-1.5 px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer transition-all shadow-md ${
-              isAddMode
-                ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300 font-extrabold animate-pulse'
-                : 'btn-depth-secondary text-[#1C2026]'
+            onClick={() => setStageFilter(stageFilter === 'farm_to_hub' ? 'all' : 'farm_to_hub')}
+            className={`flex items-center space-x-1.5 font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
+              stageFilter === 'farm_to_hub'
+                ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm'
+                : 'text-emerald-800 bg-emerald-50 border-emerald-200 hover:bg-emerald-100'
             }`}
-            title="Click to drop a custom farm, cold hub, or market on the map"
+            title="Filter Farm-to-Hub routes only"
           >
-            <Plus className="w-4 h-4" />
-            <span>{isAddMode ? 'Click Map to Place' : 'Add Node'}</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Farms ({nodes.filter(n => n.type === 'farm').length})</span>
           </button>
-        )}
 
-        {/* Animation Speed Toggle */}
-        <div className="bg-white/95 backdrop-blur-md p-1 rounded-2xl border border-[#D0C9BD] shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center text-[11px] font-bold">
-          <span className="px-2 text-[#7A8492] hidden sm:inline">Speed:</span>
-          {(['slow', 'normal', 'fast'] as const).map(speed => (
+          <button
+            onClick={() => setStageFilter(stageFilter === 'hub_to_market' ? 'all' : 'hub_to_market')}
+            className={`flex items-center space-x-1.5 font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
+              stageFilter === 'hub_to_market'
+                ? 'bg-cyan-600 text-white border-cyan-700 shadow-sm'
+                : 'text-cyan-800 bg-cyan-50 border-cyan-200 hover:bg-cyan-100'
+            }`}
+            title="Filter Hub-to-Market routes only"
+          >
+            <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <span>Hubs ({nodes.filter(n => n.type === 'hub').length})</span>
+          </button>
+
+          <button
+            onClick={() => setStageFilter(stageFilter === 'direct_farm_market' ? 'all' : 'direct_farm_market')}
+            className={`flex items-center space-x-1.5 font-bold px-2.5 py-1 rounded-xl border transition-all cursor-pointer whitespace-nowrap ${
+              stageFilter === 'direct_farm_market'
+                ? 'bg-amber-600 text-white border-amber-700 shadow-sm'
+                : 'text-amber-800 bg-amber-50 border-amber-200 hover:bg-amber-100'
+            }`}
+            title="Filter Direct Farm-to-Market routes only"
+          >
+            <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+            <span>Direct ({nodes.filter(n => n.type === 'market').length})</span>
+          </button>
+          
+          <div className="border-l border-[#D0C9BD] pl-2 flex items-center space-x-1 text-[#1C2026] font-bold text-[11px] whitespace-nowrap">
+            <Truck className="w-3.5 h-3.5 text-[#1C2026]" />
+            <span>{filteredRoutes.length}/{activeRoutes.length}</span>
+          </div>
+
+          {stageFilter !== 'all' && (
             <button
-              key={speed}
-              onClick={() => setAnimationSpeed(speed)}
-              className={`px-2 py-1 rounded-xl capitalize transition-all cursor-pointer ${
-                animationSpeed === speed
-                  ? 'btn-depth-primary text-white shadow-sm'
-                  : 'text-[#5C6470] hover:text-[#1C2026]'
-              }`}
+              onClick={() => setStageFilter('all')}
+              className="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-[#E2DED6] text-[#1C2026] border border-[#BCB4A4] hover:bg-[#D6D0C5] transition-all cursor-pointer whitespace-nowrap"
             >
-              {speed}
+              Reset
             </button>
-          ))}
+          )}
         </div>
 
-        <button
-          onClick={() => setRecenterCount(c => c + 1)}
-          className="btn-depth-secondary flex items-center space-x-1.5 px-3 py-2 rounded-2xl text-xs font-bold cursor-pointer shadow-[0_4px_16px_rgba(0,0,0,0.08)]"
-          title="Recenter Map View on Nodes"
-        >
-          <Crosshair className="w-4 h-4 text-[#1C2026]" />
-          <span>Recenter</span>
-        </button>
-
-        <div className="bg-white/95 backdrop-blur-md p-1.5 rounded-2xl border border-[#D0C9BD] shadow-[0_4px_16px_rgba(0,0,0,0.08)] flex items-center space-x-1">
-          {(Object.keys(BASEMAP_OPTIONS) as BasemapStyle[]).map(key => (
+        {/* Right Section: Action Controls (Add Node + Speed + Recenter + Basemap) in a Single Row */}
+        <div className="flex items-center gap-1.5 pointer-events-auto">
+          {/* Add Custom Node */}
+          {onAddCustomNode && (
             <button
-              key={key}
-              onClick={() => setBasemap(key)}
-              className={`px-3 py-1.5 text-xs rounded-xl font-bold transition-all cursor-pointer ${
-                basemap === key
-                  ? 'btn-depth-primary shadow-sm'
-                  : 'text-[#5C6470] hover:text-[#1C2026] hover:bg-[#F5F3EF]'
+              onClick={() => {
+                setIsAddMode(!isAddMode);
+                setPendingNodeCoords(null);
+              }}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-2xl text-xs font-bold cursor-pointer transition-all shadow-sm whitespace-nowrap ${
+                isAddMode
+                  ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300 font-extrabold animate-pulse'
+                  : 'btn-depth-secondary text-[#1C2026]'
               }`}
+              title="Click to drop a custom farm, cold hub, or market on the map"
             >
-              {BASEMAP_OPTIONS[key].name}
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isAddMode ? 'Click Map' : 'Add Node'}</span>
             </button>
-          ))}
+          )}
+
+          {/* Speed Selector */}
+          <div className="bg-white/95 backdrop-blur-md px-2 py-1 rounded-2xl border border-[#D0C9BD] shadow-sm flex items-center text-[11px] font-bold space-x-0.5 whitespace-nowrap">
+            <span className="text-[#7A8492] px-1 text-[10px]">Speed:</span>
+            {(['slow', 'normal', 'fast'] as const).map(speed => (
+              <button
+                key={speed}
+                onClick={() => setAnimationSpeed(speed)}
+                className={`px-2 py-0.5 rounded-lg capitalize transition-all cursor-pointer text-[10px] ${
+                  animationSpeed === speed
+                    ? 'btn-depth-primary text-white shadow-xs'
+                    : 'text-[#5C6470] hover:text-[#1C2026]'
+                }`}
+              >
+                {speed}
+              </button>
+            ))}
+          </div>
+
+          {/* Recenter */}
+          <button
+            onClick={() => setRecenterCount(c => c + 1)}
+            className="btn-depth-secondary flex items-center space-x-1 px-2.5 py-1.5 rounded-2xl text-xs font-bold cursor-pointer shadow-sm whitespace-nowrap"
+            title="Recenter Map View on Nodes"
+          >
+            <Crosshair className="w-3.5 h-3.5 text-[#1C2026]" />
+            <span>Recenter</span>
+          </button>
+
+          {/* Basemap Options */}
+          <div className="bg-white/95 backdrop-blur-md p-0.5 rounded-2xl border border-[#D0C9BD] shadow-sm flex items-center space-x-0.5">
+            {(Object.keys(BASEMAP_OPTIONS) as BasemapStyle[]).map(key => (
+              <button
+                key={key}
+                onClick={() => setBasemap(key)}
+                className={`px-2 py-1 text-[10px] rounded-xl font-bold transition-all cursor-pointer whitespace-nowrap ${
+                  basemap === key
+                    ? 'btn-depth-primary shadow-xs'
+                    : 'text-[#5C6470] hover:text-[#1C2026] hover:bg-[#F5F3EF]'
+                }`}
+              >
+                {BASEMAP_OPTIONS[key].name}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -497,9 +503,11 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
       <MapContainer
         center={[centerLat, centerLng]}
         zoom={8}
+        zoomControl={false}
         className="w-full h-full z-0"
         scrollWheelZoom={true}
       >
+        <ZoomControl position="bottomleft" />
         <MapRecenter nodes={nodes} triggerRecenterCount={recenterCount} />
         <MapClickHandler isAddMode={isAddMode} onMapClick={handleMapClick} />
         

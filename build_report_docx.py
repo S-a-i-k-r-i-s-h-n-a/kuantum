@@ -109,7 +109,38 @@ def create_report():
     sub_run.font.size = Pt(12)
     sub_run.font.italic = True
     sub_run.font.color.rgb = RGBColor(0x02, 0x84, 0xC7)
-    
+
+    # Team Members
+    team_p = doc.add_paragraph()
+    team_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    team_p.paragraph_format.space_before = Pt(10)
+    team_run = team_p.add_run("Team: Kuantum")
+    team_run.font.name = 'Arial'
+    team_run.font.size = Pt(12)
+    team_run.font.bold = True
+    team_run.font.color.rgb = RGBColor(0x0F, 0x17, 0x2A)
+
+    members_p = doc.add_paragraph()
+    members_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    m1 = members_p.add_run("Saikrishna N   (CH.SC.U4CSE24244)")
+    m1.font.name = 'Calibri'
+    m1.font.size = Pt(11)
+    m1.font.color.rgb = RGBColor(0x22, 0x22, 0x22)
+    members_p.add_run("     |     ")
+    m2 = members_p.add_run("Kishore S   (CH.SC.U4CSE24222)")
+    m2.font.name = 'Calibri'
+    m2.font.size = Pt(11)
+    m2.font.color.rgb = RGBColor(0x22, 0x22, 0x22)
+
+    url_p = doc.add_paragraph()
+    url_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    url_p.paragraph_format.space_before = Pt(4)
+    url_run = url_p.add_run("Live Demo: https://kuantum-app.onrender.com  |  API: https://kuantum-api.onrender.com")
+    url_run.font.name = 'Calibri'
+    url_run.font.size = Pt(10)
+    url_run.font.italic = True
+    url_run.font.color.rgb = RGBColor(0x02, 0x84, 0xC7)
+
     doc.add_paragraph().paragraph_format.space_after = Pt(12)
     
     def add_heading_1(text):
@@ -320,14 +351,20 @@ def create_report():
 
     # 7. WEBSITE & USER INTERFACE
     add_heading_1("7. Website & Interactive User Interface")
-    add_heading_2("7.1 Frontend Architecture & Design Philosophy")
+    add_heading_2("7.1 Deployment & Live URLs")
+    doc.add_paragraph("The system is live on Render cloud platform:")
+    doc.add_paragraph("Frontend Web App: https://kuantum-app.onrender.com", style='List Bullet')
+    doc.add_paragraph("Backend FastAPI Server: https://kuantum-api.onrender.com", style='List Bullet')
+    doc.add_paragraph("API Health Check: https://kuantum-api.onrender.com/api/health", style='List Bullet')
+
+    add_heading_2("7.2 Frontend Architecture & Design Philosophy")
     doc.add_paragraph(
         "The system includes a production-ready web application designed with modern dark glassmorphic aesthetics. "
         "It features vibrant color coding, smooth reactive state management, and real-time backend/standalone solver synchronization. "
         "If the Python FastAPI backend is offline or starting up, the web app automatically falls back to an embedded standalone TypeScript quantum solver, guaranteeing 100% availability."
     )
 
-    add_heading_2("7.2 Tab Navigation & Interface Modules")
+    add_heading_2("7.3 Tab Navigation & Interface Modules")
     doc.add_paragraph("1. Interactive GIS Logistics Map: Displays Leaflet dark-mode map tiles, Farm icons, Cold Storage Hub icons, Market icons, and animated active route polyline overlays with payload tooltips.", style='List Bullet')
     doc.add_paragraph("2. QUBO Matrix & Hamiltonian Inspector: Interactive grid heatmap rendering diagonal single-edge costs c_i, off-diagonal conflict penalties Q_ij, and variable energy breakdown.", style='List Bullet')
     doc.add_paragraph("3. QAOA Circuit & Probability Inspector: Schematic diagram of Hadamards, Phase Separators U(C, γ), and Mixers U(B, β) alongside statevector probability histograms.", style='List Bullet')
