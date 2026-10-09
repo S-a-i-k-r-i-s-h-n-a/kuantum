@@ -39,18 +39,22 @@ export const QuboInspector: React.FC<QuboInspectorProps> = ({ qubo }) => {
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2 flex-wrap gap-2">
+          <div className="text-[11px] font-mono panel-inset px-3 py-1.5 rounded-xl text-indigo-900 font-bold">
+            Variables: {size} | Terms: {size * size}
+          </div>
+
           <button
             onClick={() => setConflictsOnly(!conflictsOnly)}
-            className={`btn-depth-secondary flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer transition-all ${
+            className={`btn-depth-secondary flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition-all ${
               conflictsOnly ? 'bg-amber-100 text-amber-900 border-amber-300' : ''
             }`}
           >
             <Filter className="w-3.5 h-3.5 text-indigo-600" />
-            <span>{conflictsOnly ? 'Show All Terms' : 'Filter Non-Zero Only'}</span>
+            <span>{conflictsOnly ? 'All Cells' : 'Coupled Only'}</span>
           </button>
 
-          <div className="text-xs font-mono panel-inset px-3.5 py-2 rounded-xl text-[#1C2026] font-bold">
+          <div className="text-xs font-mono panel-inset px-3 py-1.5 rounded-xl text-[#1C2026] font-bold">
             H(x) = xᵀ Q x + cᵀ x
           </div>
         </div>

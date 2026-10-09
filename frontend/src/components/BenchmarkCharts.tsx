@@ -190,7 +190,16 @@ export const BenchmarkCharts: React.FC<BenchmarkChartsProps> = ({ summary, resul
                 <XAxis dataKey="iteration" stroke="#7A8492" fontSize={11} />
                 <YAxis stroke="#7A8492" fontSize={11} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#D0C9BD', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(8px)',
+                    borderColor: '#D0C9BD',
+                    borderRadius: '16px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: '#1C2026',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                  }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                 <Line type="monotone" dataKey="qaoa" name="Qiskit QAOA" stroke="#0284C7" strokeWidth={3} dot={false} />
@@ -214,7 +223,16 @@ export const BenchmarkCharts: React.FC<BenchmarkChartsProps> = ({ summary, resul
                 <XAxis dataKey="key" stroke="#7A8492" fontSize={11} tickFormatter={(val) => val === 'qaoa' ? 'QAOA' : val === 'sqa' ? 'SQA' : 'Classical'} />
                 <YAxis stroke="#7A8492" fontSize={11} />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#FFFFFF', borderColor: '#D0C9BD', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  contentStyle={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(8px)',
+                    borderColor: '#D0C9BD',
+                    borderRadius: '16px',
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    color: '#1C2026',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                  }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
                 <Bar dataKey="transport_cost_usd" name="Transport Cost ($)" fill="#0284C7" radius={[4, 4, 0, 0]} />

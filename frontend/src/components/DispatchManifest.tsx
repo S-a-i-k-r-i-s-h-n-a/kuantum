@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { RouteDetail } from '../types';
 import { Truck, Download, Search, ArrowUpDown, Filter, ChevronUp, ChevronDown } from 'lucide-react';
-import confetti from 'canvas-confetti';
 
 interface DispatchManifestProps {
   routes: RouteDetail[];
@@ -110,13 +109,6 @@ export const DispatchManifest: React.FC<DispatchManifestProps> = ({
 
   const exportCSV = () => {
     if (!routes || routes.length === 0) return;
-    
-    confetti({
-      particleCount: 50,
-      spread: 60,
-      origin: { y: 0.8 },
-      colors: ['#2D3748', '#10B981', '#06B6D4', '#E2DED6']
-    });
 
     const headers = ['Route_ID', 'Source', 'Target', 'Stage', 'Produce', 'Tons', 'Distance_KM', 'Hours', 'Freshness_PCT', 'Spoilage_USD', 'Transport_USD', 'CO2_KG'];
     const csvRows = [
@@ -186,6 +178,34 @@ export const DispatchManifest: React.FC<DispatchManifestProps> = ({
           <Download className="w-4 h-4 text-[#1C2026]" />
           <span>Export CSV Manifest</span>
         </button>
+      </div>
+
+      {/* Quick Executive Stats Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="panel-inset px-3.5 py-2.5 rounded-xl">
+          <div className="text-[10px] uppercase font-bold text-[#7A8492]">Total Freight Volume</div>
+          <div className="text-sm font-black font-mono text-[#1C2026]">
+            {routes.reduce((acc, r) => acc + r.tons, 0).toFixed(1)} <span className="text-[10px] font-normal text-[#5C6470]">Tons</span>
+          </div>
+        </div>
+        <div className="panel-inset px-3.5 py-2.5 rounded-xl">
+          <div className="text-[10px] uppercase font-bold text-[#7A8492]">Average Transit Time</div>
+          <div className="text-sm font-black font-mono text-[#1C2026]">
+            {(routes.reduce((acc, r) => acc + r.travel_hours, 0) / (routes.length || 1)).toFixed(1)} <span className="text-[10px] font-normal text-[#5C6470]">Hours</span>
+          </div>
+        </div>
+        <div className="panel-inset px-3.5 py-2.5 rounded-xl">
+          <div className="text-[10px] uppercase font-bold text-[#7A8492]">Average Route Distance</div>
+          <div className="text-sm font-black font-mono text-[#1C2026]">
+            {Math.round(routes.reduce((acc, r) => acc + r.distance_km, 0) / (routes.length || 1))} <span className="text-[10px] font-normal text-[#5C6470]">KM</span>
+          </div>
+        </div>
+        <div className="panel-inset px-3.5 py-2.5 rounded-xl">
+          <div className="text-[10px] uppercase font-bold text-[#7A8492]">Avg Freshness Index</div>
+          <div className="text-sm font-black font-mono text-emerald-700">
+            {(routes.reduce((acc, r) => acc + r.freshness_score, 0) / (routes.length || 1)).toFixed(1)}%
+          </div>
+        </div>
       </div>
 
       {/* Search & Commodity Filters */}

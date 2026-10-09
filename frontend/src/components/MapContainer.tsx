@@ -58,24 +58,45 @@ const createCustomIcon = (type: 'farm' | 'hub' | 'market', label: string, produc
     iconContent = '🛒';
   }
 
-  const selectedRing = isSelected ? 'ring-4 ring-[#2D3748] scale-125' : '';
-
+  // Icon HTML: label is inside the declared iconSize bounds (no overflow)
+  // so every pixel of the visual is a valid click target.
   const html = `
-    <div class="relative flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-tr ${badgeGradient} border-2 shadow-[0_4px_10px_rgba(0,0,0,0.25)] text-white font-bold text-sm transform hover:scale-110 transition-all duration-200 ${selectedRing}">
-      <span class="text-lg drop-shadow">${iconContent}</span>
-      <div class="absolute -bottom-5 whitespace-nowrap bg-white/95 backdrop-blur text-[#1C2026] text-[10px] font-bold px-2 py-0.5 rounded-md border border-[#D0C9BD] shadow-md">
-        ${label}
-      </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+      <div style="
+        display:flex;align-items:center;justify-content:center;
+        width:40px;height:40px;border-radius:14px;
+        background: linear-gradient(135deg,${type==='farm'?'#16a34a,#15803d':type==='hub'?'#0891b2,#1d4ed8':'#7c3aed,#4338ca'});
+        border:2px solid white;
+        box-shadow:0 4px 10px rgba(0,0,0,0.28);
+        font-size:18px;
+        ${isSelected ? 'outline:3px solid #2D3748;outline-offset:2px;transform:scale(1.15);' : ''}
+      ">${iconContent}</div>
+      <div style="
+        background:white;
+        color:#1C2026;
+        font-size:10px;
+        font-weight:700;
+        padding:1px 6px;
+        border-radius:6px;
+        border:1px solid #D0C9BD;
+        box-shadow:0 2px 4px rgba(0,0,0,0.12);
+        white-space:nowrap;
+        max-width:80px;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        line-height:1.4;
+      ">${label}</div>
     </div>
   `;
 
   return L.divIcon({
     html,
     className: 'custom-leaflet-marker',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20]
+    iconSize: [56, 56],
+    iconAnchor: [28, 28]
   });
 };
+
 
 const createMovingTruckIcon = (produceIcon: string, isHighlighted: boolean, tons?: number) => {
   const highlightClass = isHighlighted 
@@ -280,6 +301,19 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
           )}
         </div>
 
+        {/* Floating guidance banner when in Add Node placement mode */}
+        {isAddMode && (
+          <div className="bg-amber-500 text-slate-950 font-extrabold text-xs px-4 py-1.5 rounded-2xl shadow-lg border border-amber-300 animate-pulse pointer-events-auto flex items-center space-x-2">
+            <span>🎯 Click anywhere on the map to place a new facility node</span>
+            <button
+              onClick={() => setIsAddMode(false)}
+              className="bg-black/20 hover:bg-black/30 rounded-full px-2 py-0.5 text-[10px] ml-1"
+            >
+              ✕ Cancel
+            </button>
+          </div>
+        )}
+
         {/* Right Section: Action Controls (Add Node + Speed + Recenter + Basemap) in a Single Row */}
         <div className="flex items-center gap-1.5 pointer-events-auto">
           {/* Add Custom Node */}
@@ -452,15 +486,17 @@ export const LogisticsMap: React.FC<MapViewProps> = ({
         <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-[1000] flex flex-col items-center space-y-2">
           {/* Savings badge above toggle – only visible in After mode */}
           {!showBefore && savingsPct > 0 && (
-            <div className="flex items-center space-x-1.5 bg-emerald-600 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-lg animate-bounce">
-              <Zap className="w-3 h-3" />
-              <span>QUANTUM SAVES {savingsPct}% COST vs NAIVE</span>
+            <div className="flex items-center space-x-1.5 bg-[#1C2026] text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg border border-[#3A4556]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="text-emerald-400 font-extrabold">QUANTUM ADVANTAGE</span>
+              <span className="text-slate-300">|</span>
+              <span>Saves {savingsPct}% Cost vs Naive</span>
             </div>
           )}
           {showBefore && (
-            <div className="flex items-center space-x-1.5 bg-rose-600 text-white text-[11px] font-extrabold px-3 py-1 rounded-full shadow-lg">
-              <AlertTriangle className="w-3 h-3" />
-              <span>UNOPTIMIZED — {beforeRoutes.length} ROUTES ACTIVE (HIGH COST)</span>
+            <div className="flex items-center space-x-1.5 bg-rose-900/90 text-rose-100 text-[11px] font-bold px-3 py-1 rounded-full shadow-lg border border-rose-700/50 backdrop-blur-sm">
+              <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+              <span>Unoptimized Baseline — {beforeRoutes.length} Unpruned Routes</span>
             </div>
           )}
 

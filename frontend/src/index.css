@@ -238,8 +238,10 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .custom-leaflet-marker {
-  background: transparent;
-  border: none;
+  background: transparent !important;
+  border: none !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }
 
 /* Tactile Sand Popups */

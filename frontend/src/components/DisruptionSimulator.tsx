@@ -1,5 +1,5 @@
-import React from 'react';
-import { Thermometer, ShieldAlert, Fuel, Sliders, RefreshCw, AlertTriangle, Flame, Wind } from 'lucide-react';
+import React, { useState } from 'react';
+import { Thermometer, ShieldAlert, Fuel, Sliders, RefreshCw, AlertTriangle, Flame, Wind, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface DisruptionSimulatorProps {
   params: {
@@ -19,6 +19,8 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
   onReOptimize,
   isOptimizing
 }) => {
+  const [showAdvanced, setShowAdvanced] = useState<boolean>(false);
+
   const applyPreset = (preset: 'normal' | 'heatwave' | 'blockade' | 'fuel_crisis') => {
     if (preset === 'normal') {
       onChangeParams({
@@ -52,17 +54,17 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
   };
 
   return (
-    <div className="card-depth-elevated rounded-3xl p-6 sm:p-7 text-[#1C2026] space-y-5">
+    <div className="card-depth-elevated rounded-3xl p-5 sm:p-6 text-[#1C2026] space-y-4">
       {/* Title & Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D8D2C7] pb-4">
-        <div className="flex items-center space-x-3.5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center space-x-3">
           <div className="p-2.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-700 shadow-sm">
             <AlertTriangle className="w-5 h-5 text-amber-600" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="font-black text-base text-[#1C2026] tracking-tight">
-                Supply Chain Disruption Simulator
+              <h3 className="font-black text-sm sm:text-base text-[#1C2026] tracking-tight">
+                Disruption Scenario Simulator
               </h3>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
                 params.spoilage_weight > 3.5 || params.disruption_factor > 1.4
@@ -75,18 +77,17 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
                   ? '🔥 High Stress'
                   : params.spoilage_weight > 2.2 || params.disruption_factor > 1.1
                   ? '⚠️ Elevated Stress'
-                  : '🌿 Normal Conditions'}
+                  : '🌿 Normal'}
               </span>
             </div>
-            <p className="text-xs text-[#5C6470] mt-0.5 font-medium">
-              Inject heatwaves, traffic blockades, and fuel surges to test Quantum QUBO robustness.
+            <p className="text-xs text-[#5C6470] mt-0.5 font-medium hidden sm:block">
+              Simulate weather heatwaves, traffic blocks, and fuel shocks against the QUBO Hamiltonian.
             </p>
           </div>
         </div>
 
-        {/* Quick crisis presets */}
+        {/* Quick crisis presets + Controls */}
         <div className="flex items-center flex-wrap gap-2">
-          <span className="text-[11px] font-bold text-[#7A8492] mr-1">Presets:</span>
           <button
             onClick={() => applyPreset('normal')}
             className="btn-depth-secondary flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer"
@@ -113,13 +114,24 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
             className="btn-depth-secondary flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer"
           >
             <Fuel className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Fuel Spike</span>
+            <span>Fuel Surge</span>
+          </button>
+
+          {/* Toggle Advanced Sliders */}
+          <button
+            onClick={() => setShowAdvanced(!showAdvanced)}
+            className="btn-depth-secondary flex items-center space-x-1 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer text-[#5C6470]"
+            title="Configure individual penalty weights"
+          >
+            <Sliders className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Parameters</span>
+            {showAdvanced ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
           </button>
 
           <button
             onClick={onReOptimize}
             disabled={isOptimizing}
-            className="btn-depth-primary flex items-center space-x-2 px-4 py-2 rounded-xl text-xs cursor-pointer disabled:opacity-50 ml-1.5"
+            className="btn-depth-primary flex items-center space-x-2 px-4 py-2 rounded-xl text-xs cursor-pointer disabled:opacity-50 ml-1"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${isOptimizing ? 'animate-spin' : ''} text-white`} />
             <span>Re-Solve</span>
@@ -127,8 +139,9 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
         </div>
       </div>
 
-      {/* Sliders Grid with Inset Wells */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Sliders Grid - Collapsible */}
+      {showAdvanced && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-3 border-t border-[#D8D2C7] animate-fade-slide">
         {/* Heatwave / Perishability Slider */}
         <div className="panel-inset p-4 rounded-2xl space-y-2.5">
           <div className="flex justify-between items-center text-xs">
@@ -233,6 +246,7 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 };

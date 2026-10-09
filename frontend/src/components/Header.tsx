@@ -50,35 +50,38 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="flex items-center flex-wrap gap-3">
-        {/* Dataset selector with depth */}
-        <div className="flex items-center space-x-2 bg-[#FFFFFF] border border-[#D0C9BD] rounded-xl px-3.5 py-2 text-xs shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_0_#BCB4A4]">
-          <span className="text-[#7A8492] font-semibold">Dataset:</span>
-          <select
-            value={selectedDatasetId}
-            onChange={(e) => onSelectDataset(e.target.value)}
-            className="bg-transparent text-[#1C2026] font-bold focus:outline-none cursor-pointer"
-          >
-            {Object.values(datasets).map((ds) => (
-              <option key={ds.id} value={ds.id} className="bg-[#FFFFFF] text-[#1C2026]">
-                {ds.title} ({ds.region})
-              </option>
-            ))}
-          </select>
-        </div>
+        {/* Unified Controls Toolbar */}
+        <div className="flex items-center bg-[#FFFFFF] border border-[#D0C9BD] rounded-xl text-xs shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_0_#BCB4A4] divide-x divide-[#EAE6DE] overflow-hidden">
+          {/* Dataset selector */}
+          <div className="flex items-center space-x-1.5 px-3 py-2">
+            <span className="text-[#7A8492] font-semibold text-[11px]">Region:</span>
+            <select
+              value={selectedDatasetId}
+              onChange={(e) => onSelectDataset(e.target.value)}
+              className="bg-transparent text-[#1C2026] font-bold focus:outline-none cursor-pointer max-w-[150px] sm:max-w-none truncate"
+            >
+              {Object.values(datasets).map((ds) => (
+                <option key={ds.id} value={ds.id} className="bg-[#FFFFFF] text-[#1C2026]">
+                  {ds.title}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Algorithm selector with depth */}
-        <div className="flex items-center space-x-2 bg-[#FFFFFF] border border-[#D0C9BD] rounded-xl px-3.5 py-2 text-xs shadow-[0_1px_3px_rgba(0,0,0,0.05),0_1px_0_#BCB4A4]">
-          <span className="text-[#7A8492] font-semibold">Solver:</span>
-          <select
-            value={activeAlgorithm}
-            onChange={(e) => onSelectAlgorithm(e.target.value)}
-            className="bg-transparent text-[#1C2026] font-bold focus:outline-none cursor-pointer"
-          >
-            <option value="benchmark_all" className="bg-[#FFFFFF] text-[#1C2026]">⚡ Benchmark All Solvers</option>
-            <option value="qaoa" className="bg-[#FFFFFF] text-[#1C2026]">⚛️ Qiskit QAOA Simulator</option>
-            <option value="sqa" className="bg-[#FFFFFF] text-[#1C2026]">🧲 Simulated Quantum Annealing</option>
-            <option value="classical_sa" className="bg-[#FFFFFF] text-[#1C2026]">💻 Classical Annealing</option>
-          </select>
+          {/* Algorithm selector */}
+          <div className="flex items-center space-x-1.5 px-3 py-2">
+            <span className="text-[#7A8492] font-semibold text-[11px]">Solver:</span>
+            <select
+              value={activeAlgorithm}
+              onChange={(e) => onSelectAlgorithm(e.target.value)}
+              className="bg-transparent text-[#1C2026] font-bold focus:outline-none cursor-pointer"
+            >
+              <option value="benchmark_all" className="bg-[#FFFFFF] text-[#1C2026]">⚡ Benchmark All</option>
+              <option value="qaoa" className="bg-[#FFFFFF] text-[#1C2026]">⚛️ QAOA (Qiskit)</option>
+              <option value="sqa" className="bg-[#FFFFFF] text-[#1C2026]">🧲 SQA (Quantum Annealing)</option>
+              <option value="classical_sa" className="bg-[#FFFFFF] text-[#1C2026]">💻 Classical Annealing</option>
+            </select>
+          </div>
         </div>
 
         {/* Status Pill with depth */}
