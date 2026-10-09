@@ -301,3 +301,72 @@ export function runStandaloneOptimization(
     timestamp: Date.now() / 1000
   };
 }
+
+/**
+ * Generates ALL possible routes between nodes (naive / unoptimized baseline).
+ * Used to show the "Before Optimization" state on the map.
+ */
+export function generateAllRoutes(dataset: Dataset): import('./types').RouteDetail[] {
+  const farms = dataset.nodes.filter(n => n.type === 'farm');
+  const hubs = dataset.nodes.filter(n => n.type === 'hub');
+  const markets = dataset.nodes.filter(n => n.type === 'market');
+
+  const allRoutes: import('./types').RouteDetail[] = [];
+
+  const SPEED = 70;
+  const COST_PER_KM = 1.4;
+  const CO2_PER_KM = 0.65;
+
+  const buildRoute = (
+    sourceId: string,
+    targetId: string,
+    sourceLat: number, sourceLng: number,
+    targetLat: number, targetLng: number,
+    stage: string,
+    produce: string,
+    produceIcon: string,
+    tons: number
+  ): import('./types').RouteDetail => {
+    const dist = haversineKm(sourceLat, sourceLng, targetLat, targetLng);
+    const travelH = dist / SPEED;
+    const spoilRate = produce === 'berries' ? 0.038 : produce === 'dairy' ? 0.025 : 0.015;
+    const spoilFrac = 1.0 - Math.exp(-spoilRate * travelH);
+    const spoilLoss = spoilFrac * tons * 2000;
+    const transCost = dist * COST_PER_KM;
+    const co2Kg = dist * CO2_PER_KM;
+    return {
+      edge_id: `naive_${sourceId}->${targetId}`,
+      source: sourceId,
+      target: targetId,
+      stage,
+      produce,
+      produce_icon: produceIcon,
+      tons,
+      distance_km: Number(dist.toFixed(1)),
+      travel_hours: Number(travelH.toFixed(1)),
+      spoilage_loss_usd: Number(spoilLoss.toFixed(2)),
+      spoilage_pct: Number((spoilFrac * 100).toFixed(1)),
+      freshness_score: Number(Math.max(0, 100 - spoilFrac * 100).toFixed(1)),
+      transport_cost_usd: Number(transCost.toFixed(2)),
+      co2_kg: Number(co2Kg.toFixed(2))
+    };
+  };
+
+  farms.forEach(f => {
+    const icon = f.produce === 'berries' ? '🍓' : f.produce === 'dairy' ? '🥛' : f.produce === 'leafy_greens' ? '🥬' : f.produce === 'avocados' ? '🥑' : '🍅';
+    hubs.forEach(h => {
+      allRoutes.push(buildRoute(f.id, h.id, f.lat, f.lng, h.lat, h.lng, 'farm_to_hub', f.produce || 'tomatoes', icon, f.supply_tons || 10));
+    });
+    markets.forEach(m => {
+      allRoutes.push(buildRoute(f.id, m.id, f.lat, f.lng, m.lat, m.lng, 'direct_farm_market', f.produce || 'tomatoes', icon, Math.min(f.supply_tons || 5, m.demand_tons || 5)));
+    });
+  });
+
+  hubs.forEach(h => {
+    markets.forEach(m => {
+      allRoutes.push(buildRoute(h.id, m.id, h.lat, h.lng, m.lat, m.lng, 'hub_to_market', 'mixed', '📦', m.demand_tons || 10));
+    });
+  });
+
+  return allRoutes;
+}

@@ -1,0 +1,28 @@
+services:
+  # ── Backend: FastAPI on Render Web Service ────────────────────────────────
+  - type: web
+    name: kuantum-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+    plan: free
+
+  # ── Frontend: React/Vite as a Static Site ────────────────────────────────
+  - type: web
+    name: kuantum-app
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_BACKEND_URL
+        value: https://kuantum-api.onrender.com   # ← update after backend deploys
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    plan: free

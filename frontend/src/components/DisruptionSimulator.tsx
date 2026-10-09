@@ -1,5 +1,5 @@
 import React from 'react';
-import { Thermometer, ShieldAlert, Fuel, Sliders, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Thermometer, ShieldAlert, Fuel, Sliders, RefreshCw, AlertTriangle, Flame, Wind } from 'lucide-react';
 
 interface DisruptionSimulatorProps {
   params: {
@@ -19,44 +19,111 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
   onReOptimize,
   isOptimizing
 }) => {
+  const applyPreset = (preset: 'normal' | 'heatwave' | 'blockade' | 'fuel_crisis') => {
+    if (preset === 'normal') {
+      onChangeParams({
+        spoilage_weight: 2.0,
+        cost_weight: 1.0,
+        co2_weight: 1.2,
+        disruption_factor: 1.0
+      });
+    } else if (preset === 'heatwave') {
+      onChangeParams({
+        spoilage_weight: 4.8,
+        cost_weight: 1.2,
+        co2_weight: 1.5,
+        disruption_factor: 1.15
+      });
+    } else if (preset === 'blockade') {
+      onChangeParams({
+        spoilage_weight: 3.2,
+        cost_weight: 1.6,
+        co2_weight: 2.0,
+        disruption_factor: 1.75
+      });
+    } else if (preset === 'fuel_crisis') {
+      onChangeParams({
+        spoilage_weight: 2.5,
+        cost_weight: 2.5,
+        co2_weight: 2.8,
+        disruption_factor: 1.2
+      });
+    }
+  };
+
   return (
-    <div className="bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-5 shadow-xl text-white space-y-4">
-      {/* Title */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-        <div className="flex items-center space-x-2">
-          <div className="p-2 rounded-lg bg-amber-950 border border-amber-500/30 text-amber-400">
-            <AlertTriangle className="w-5 h-5" />
+    <div className="card-depth-elevated rounded-3xl p-6 sm:p-7 text-[#1C2026] space-y-5">
+      {/* Title & Actions */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D8D2C7] pb-4">
+        <div className="flex items-center space-x-3.5">
+          <div className="p-2.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-700 shadow-sm">
+            <AlertTriangle className="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <h3 className="font-bold text-base bg-gradient-to-r from-amber-300 via-rose-300 to-cyan-300 bg-clip-text text-transparent">
-              Supply Chain Disruption & Scenario Simulator
+            <h3 className="font-black text-base text-[#1C2026] tracking-tight">
+              Supply Chain Disruption Simulator
             </h3>
-            <p className="text-xs text-slate-400">
-              Inject real-time extreme weather, traffic blockades, and fuel price surges to test Quantum QUBO resilience.
+            <p className="text-xs text-[#5C6470] mt-0.5 font-medium">
+              Inject heatwaves, traffic blockades, and fuel surges to test Quantum QUBO robustness.
             </p>
           </div>
         </div>
 
-        <button
-          onClick={onReOptimize}
-          disabled={isOptimizing}
-          className="flex items-center space-x-2 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-400 hover:to-rose-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs transition-all shadow-md cursor-pointer disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isOptimizing ? 'animate-spin' : ''}`} />
-          <span>Re-Run Quantum Solver</span>
-        </button>
+        {/* Quick crisis presets */}
+        <div className="flex items-center flex-wrap gap-2">
+          <span className="text-[11px] font-bold text-[#7A8492] mr-1">Presets:</span>
+          <button
+            onClick={() => applyPreset('normal')}
+            className="btn-depth-secondary flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer"
+          >
+            <Wind className="w-3.5 h-3.5 text-cyan-600" />
+            <span>Optimal</span>
+          </button>
+          <button
+            onClick={() => applyPreset('heatwave')}
+            className="btn-depth-secondary flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer"
+          >
+            <Flame className="w-3.5 h-3.5 text-rose-600" />
+            <span>Heatwave</span>
+          </button>
+          <button
+            onClick={() => applyPreset('blockade')}
+            className="btn-depth-secondary flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer"
+          >
+            <ShieldAlert className="w-3.5 h-3.5 text-amber-600" />
+            <span>Detours</span>
+          </button>
+          <button
+            onClick={() => applyPreset('fuel_crisis')}
+            className="btn-depth-secondary flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer"
+          >
+            <Fuel className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Fuel Spike</span>
+          </button>
+
+          <button
+            onClick={onReOptimize}
+            disabled={isOptimizing}
+            className="btn-depth-primary flex items-center space-x-2 px-4 py-2 rounded-xl text-xs cursor-pointer disabled:opacity-50 ml-1.5"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isOptimizing ? 'animate-spin' : ''} text-white`} />
+            <span>Re-Solve</span>
+          </button>
+        </div>
       </div>
 
-      {/* Sliders Grid */}
+      {/* Sliders Grid with Inset Wells */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Heatwave / Perishability Slider */}
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+        <div className="panel-inset p-4 rounded-2xl space-y-2.5">
           <div className="flex justify-between items-center text-xs">
-            <span className="font-semibold text-rose-300 flex items-center space-x-1">
-              <Thermometer className="w-4 h-4 text-rose-400" />
-              <span>Spoilage Penalty Weight</span>
+            <span className="font-bold text-[#1C2026] flex items-center space-x-1.5">
+              <Thermometer className="w-4 h-4 text-rose-600" />
+              <span>Spoilage Penalty</span>
             </span>
-            <span className="font-mono text-rose-400 font-bold">{params.spoilage_weight.toFixed(1)}x</span>
+            <span className="font-mono text-rose-700 font-extrabold bg-white px-2 py-0.5 rounded border border-[#CCC5B7]">
+              {params.spoilage_weight.toFixed(1)}x
+            </span>
           </div>
           <input
             type="range"
@@ -65,22 +132,24 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
             step="0.1"
             value={params.spoilage_weight}
             onChange={(e) => onChangeParams({ ...params, spoilage_weight: parseFloat(e.target.value) })}
-            className="w-full accent-rose-500 cursor-pointer"
+            className="w-full accent-[#2D3748] cursor-pointer h-1.5 bg-[#CCC5B7] rounded-lg"
           />
-          <div className="text-[10px] text-slate-500 flex justify-between">
-            <span>Normal Decay</span>
-            <span className="text-rose-400">Heatwave Surge</span>
+          <div className="text-[10px] text-[#5C6470] flex justify-between font-semibold">
+            <span>Normal Shelf-life</span>
+            <span className="text-rose-700">Heatwave Decay</span>
           </div>
         </div>
 
         {/* Road Disruption Factor */}
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+        <div className="panel-inset p-4 rounded-2xl space-y-2.5">
           <div className="flex justify-between items-center text-xs">
-            <span className="font-semibold text-amber-300 flex items-center space-x-1">
-              <ShieldAlert className="w-4 h-4 text-amber-400" />
+            <span className="font-bold text-[#1C2026] flex items-center space-x-1.5">
+              <ShieldAlert className="w-4 h-4 text-amber-600" />
               <span>Route Traffic / Detours</span>
             </span>
-            <span className="font-mono text-amber-400 font-bold">{((params.disruption_factor - 1.0) * 100).toFixed(0)}% Extra</span>
+            <span className="font-mono text-amber-800 font-extrabold bg-white px-2 py-0.5 rounded border border-[#CCC5B7]">
+              +{((params.disruption_factor - 1.0) * 100).toFixed(0)}% Dist
+            </span>
           </div>
           <input
             type="range"
@@ -89,22 +158,24 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
             step="0.05"
             value={params.disruption_factor}
             onChange={(e) => onChangeParams({ ...params, disruption_factor: parseFloat(e.target.value) })}
-            className="w-full accent-amber-500 cursor-pointer"
+            className="w-full accent-[#2D3748] cursor-pointer h-1.5 bg-[#CCC5B7] rounded-lg"
           />
-          <div className="text-[10px] text-slate-500 flex justify-between">
+          <div className="text-[10px] text-[#5C6470] flex justify-between font-semibold">
             <span>Clear Highways</span>
-            <span className="text-amber-400">Severe Blockade</span>
+            <span className="text-amber-800">Severe Detours</span>
           </div>
         </div>
 
         {/* CO2 Emissions Weight */}
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+        <div className="panel-inset p-4 rounded-2xl space-y-2.5">
           <div className="flex justify-between items-center text-xs">
-            <span className="font-semibold text-cyan-300 flex items-center space-x-1">
-              <Sliders className="w-4 h-4 text-cyan-400" />
-              <span>Carbon Tax / CO₂ Penalty</span>
+            <span className="font-bold text-[#1C2026] flex items-center space-x-1.5">
+              <Sliders className="w-4 h-4 text-blue-600" />
+              <span>Carbon Tax Weight</span>
             </span>
-            <span className="font-mono text-cyan-400 font-bold">{params.co2_weight.toFixed(1)}x</span>
+            <span className="font-mono text-blue-700 font-extrabold bg-white px-2 py-0.5 rounded border border-[#CCC5B7]">
+              {params.co2_weight.toFixed(1)}x
+            </span>
           </div>
           <input
             type="range"
@@ -113,22 +184,24 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
             step="0.1"
             value={params.co2_weight}
             onChange={(e) => onChangeParams({ ...params, co2_weight: parseFloat(e.target.value) })}
-            className="w-full accent-cyan-500 cursor-pointer"
+            className="w-full accent-[#2D3748] cursor-pointer h-1.5 bg-[#CCC5B7] rounded-lg"
           />
-          <div className="text-[10px] text-slate-500 flex justify-between">
+          <div className="text-[10px] text-[#5C6470] flex justify-between font-semibold">
             <span>Low Tax</span>
-            <span className="text-cyan-400">Strict Green SLA</span>
+            <span className="text-blue-700">Strict Zero-CO₂</span>
           </div>
         </div>
 
         {/* Fuel Cost Weight */}
-        <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-2">
+        <div className="panel-inset p-4 rounded-2xl space-y-2.5">
           <div className="flex justify-between items-center text-xs">
-            <span className="font-semibold text-emerald-300 flex items-center space-x-1">
-              <Fuel className="w-4 h-4 text-emerald-400" />
-              <span>Transport Fuel Multiplier</span>
+            <span className="font-bold text-[#1C2026] flex items-center space-x-1.5">
+              <Fuel className="w-4 h-4 text-emerald-600" />
+              <span>Fuel Price Multiplier</span>
             </span>
-            <span className="font-mono text-emerald-400 font-bold">{params.cost_weight.toFixed(1)}x</span>
+            <span className="font-mono text-emerald-700 font-extrabold bg-white px-2 py-0.5 rounded border border-[#CCC5B7]">
+              {params.cost_weight.toFixed(1)}x
+            </span>
           </div>
           <input
             type="range"
@@ -137,11 +210,11 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
             step="0.1"
             value={params.cost_weight}
             onChange={(e) => onChangeParams({ ...params, cost_weight: parseFloat(e.target.value) })}
-            className="w-full accent-emerald-500 cursor-pointer"
+            className="w-full accent-[#2D3748] cursor-pointer h-1.5 bg-[#CCC5B7] rounded-lg"
           />
-          <div className="text-[10px] text-slate-500 flex justify-between">
-            <span>Standard Rate</span>
-            <span className="text-emerald-400">Fuel Spike</span>
+          <div className="text-[10px] text-[#5C6470] flex justify-between font-semibold">
+            <span>Baseline Fuel</span>
+            <span className="text-emerald-700">Severe Surge</span>
           </div>
         </div>
       </div>
