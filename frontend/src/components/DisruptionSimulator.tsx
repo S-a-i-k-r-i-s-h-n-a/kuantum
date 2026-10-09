@@ -60,9 +60,24 @@ export const DisruptionSimulator: React.FC<DisruptionSimulatorProps> = ({
             <AlertTriangle className="w-5 h-5 text-amber-600" />
           </div>
           <div>
-            <h3 className="font-black text-base text-[#1C2026] tracking-tight">
-              Supply Chain Disruption Simulator
-            </h3>
+            <div className="flex items-center space-x-2">
+              <h3 className="font-black text-base text-[#1C2026] tracking-tight">
+                Supply Chain Disruption Simulator
+              </h3>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                params.spoilage_weight > 3.5 || params.disruption_factor > 1.4
+                  ? 'bg-rose-100 text-rose-800 border-rose-300 animate-pulse'
+                  : params.spoilage_weight > 2.2 || params.disruption_factor > 1.1
+                  ? 'bg-amber-100 text-amber-800 border-amber-300'
+                  : 'bg-emerald-100 text-emerald-800 border-emerald-300'
+              }`}>
+                {params.spoilage_weight > 3.5 || params.disruption_factor > 1.4
+                  ? '🔥 High Stress'
+                  : params.spoilage_weight > 2.2 || params.disruption_factor > 1.1
+                  ? '⚠️ Elevated Stress'
+                  : '🌿 Normal Conditions'}
+              </span>
+            </div>
             <p className="text-xs text-[#5C6470] mt-0.5 font-medium">
               Inject heatwaves, traffic blockades, and fuel surges to test Quantum QUBO robustness.
             </p>

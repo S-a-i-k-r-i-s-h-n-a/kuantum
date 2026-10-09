@@ -390,65 +390,70 @@ export const App: React.FC = () => {
         )}
 
         {/* Tactile Tab Navigation */}
-        <div className="flex items-center space-x-2.5 border-b border-[#D8D2C7] pb-3.5 overflow-x-auto">
+        <div className="flex items-center space-x-2.5 border-b border-[#D8D2C7] pb-3.5 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab('map')}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer ${
+            className={`flex items-center space-x-2 px-4.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all duration-150 ${
               activeTab === 'map'
-                ? 'btn-depth-primary shadow-lg'
-                : 'btn-depth-secondary text-[#5C6470]'
+                ? 'btn-depth-primary shadow-lg scale-[1.02]'
+                : 'btn-depth-secondary text-[#5C6470] hover:text-[#1C2026]'
             }`}
           >
             <Map className="w-4 h-4" />
             <span>Interactive Logistics Map</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${activeTab === 'map' ? 'bg-white/20 text-white' : 'bg-[#E2DED6] text-[#7A8492]'}`}>1</span>
           </button>
 
           <button
             onClick={() => setActiveTab('qubo')}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer ${
+            className={`flex items-center space-x-2 px-4.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all duration-150 ${
               activeTab === 'qubo'
-                ? 'btn-depth-primary shadow-lg'
-                : 'btn-depth-secondary text-[#5C6470]'
+                ? 'btn-depth-primary shadow-lg scale-[1.02]'
+                : 'btn-depth-secondary text-[#5C6470] hover:text-[#1C2026]'
             }`}
           >
             <Layers className="w-4 h-4" />
             <span>QUBO Matrix & Hamiltonian</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${activeTab === 'qubo' ? 'bg-white/20 text-white' : 'bg-[#E2DED6] text-[#7A8492]'}`}>2</span>
           </button>
 
           <button
             onClick={() => setActiveTab('qaoa')}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer ${
+            className={`flex items-center space-x-2 px-4.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all duration-150 ${
               activeTab === 'qaoa'
-                ? 'btn-depth-primary shadow-lg'
-                : 'btn-depth-secondary text-[#5C6470]'
+                ? 'btn-depth-primary shadow-lg scale-[1.02]'
+                : 'btn-depth-secondary text-[#5C6470] hover:text-[#1C2026]'
             }`}
           >
             <Cpu className="w-4 h-4" />
             <span>QAOA Circuit Viewer</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${activeTab === 'qaoa' ? 'bg-white/20 text-white' : 'bg-[#E2DED6] text-[#7A8492]'}`}>3</span>
           </button>
 
           <button
             onClick={() => setActiveTab('benchmark')}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer ${
+            className={`flex items-center space-x-2 px-4.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all duration-150 ${
               activeTab === 'benchmark'
-                ? 'btn-depth-primary shadow-lg'
-                : 'btn-depth-secondary text-[#5C6470]'
+                ? 'btn-depth-primary shadow-lg scale-[1.02]'
+                : 'btn-depth-secondary text-[#5C6470] hover:text-[#1C2026]'
             }`}
           >
             <TrendingUp className="w-4 h-4" />
             <span>Solver Benchmarks</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${activeTab === 'benchmark' ? 'bg-white/20 text-white' : 'bg-[#E2DED6] text-[#7A8492]'}`}>4</span>
           </button>
 
           <button
             onClick={() => setActiveTab('manifest')}
-            className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl text-xs font-bold cursor-pointer ${
+            className={`flex items-center space-x-2 px-4.5 py-2.5 rounded-xl text-xs font-bold cursor-pointer transition-all duration-150 ${
               activeTab === 'manifest'
-                ? 'btn-depth-primary shadow-lg'
-                : 'btn-depth-secondary text-[#5C6470]'
+                ? 'btn-depth-primary shadow-lg scale-[1.02]'
+                : 'btn-depth-secondary text-[#5C6470] hover:text-[#1C2026]'
             }`}
           >
             <Truck className="w-4 h-4" />
             <span>Dispatch Manifest</span>
+            <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${activeTab === 'manifest' ? 'bg-white/20 text-white' : 'bg-[#E2DED6] text-[#7A8492]'}`}>5</span>
           </button>
         </div>
 
