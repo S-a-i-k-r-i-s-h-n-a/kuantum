@@ -44,17 +44,13 @@ const BASEMAP_OPTIONS: Record<BasemapStyle, { name: string; url: string; attribu
 };
 
 const createCustomIcon = (type: 'farm' | 'hub' | 'market', label: string, produceIcon?: string, isSelected?: boolean) => {
-  let badgeGradient = 'from-emerald-500 to-teal-700 border-white';
   let iconContent = produceIcon || '🌾';
 
   if (type === 'farm') {
-    badgeGradient = 'from-emerald-600 to-green-700 border-white';
     iconContent = produceIcon || '🌾';
   } else if (type === 'hub') {
-    badgeGradient = 'from-cyan-600 to-blue-700 border-white';
     iconContent = '🧊';
   } else if (type === 'market') {
-    badgeGradient = 'from-purple-600 to-indigo-700 border-white';
     iconContent = '🛒';
   }
 
