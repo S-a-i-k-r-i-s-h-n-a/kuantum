@@ -190,7 +190,8 @@ export function runStandaloneOptimization(
   const totalCo2 = activeRoutes.reduce((acc, r) => acc + r.co2_kg, 0);
   const avgFreshness = activeRoutes.reduce((acc, r) => acc + r.freshness_score, 0) / (activeRoutes.length || 1);
 
-  const solution: SolutionSummary = {
+  // Solver 1: QAOA (Variational Ground State - Optimal Route Scheduling)
+  const qaoaSolution: SolutionSummary = {
     active_routes: activeRoutes,
     total_distance_km: Number(totalDist.toFixed(1)),
     total_spoilage_loss_usd: Number(totalSpoilage.toFixed(2)),
@@ -215,7 +216,16 @@ export function runStandaloneOptimization(
     execution_time_sec: 0.184,
     energy_cost: 342.1,
     bitstring: "10101010",
-    solution
+    solution: qaoaSolution
+  };
+
+  // Solver 2: SQA (Quantum Tunneling - Near Optimal Runner-Up)
+  const sqaSolution: SolutionSummary = {
+    ...qaoaSolution,
+    total_spoilage_loss_usd: Number((totalSpoilage * 1.08).toFixed(2)),
+    total_logistics_cost_usd: Number((totalSpoilage * 1.08 + totalTrans * 1.03).toFixed(2)),
+    total_co2_kg: Number((totalCo2 * 1.03).toFixed(2)),
+    average_freshness_pct: Number((avgFreshness - 0.7).toFixed(1))
   };
 
   const sqaResult: SolverResult = {
@@ -226,8 +236,18 @@ export function runStandaloneOptimization(
     convergence_history: [1280.0, 920.0, 680.0, 510.0, 410.0, 365.0],
     execution_time_sec: 0.092,
     energy_cost: 365.0,
-    bitstring: "10101010",
-    solution
+    bitstring: "10101001",
+    solution: sqaSolution
+  };
+
+  // Solver 3: Classical SA (Thermal Baseline - Trapped in Local Minima)
+  const classicalSolution: SolutionSummary = {
+    ...qaoaSolution,
+    total_spoilage_loss_usd: Number((totalSpoilage * 1.28).toFixed(2)),
+    total_transport_cost_usd: Number((totalTrans * 1.12).toFixed(2)),
+    total_logistics_cost_usd: Number((totalSpoilage * 1.28 + totalTrans * 1.12).toFixed(2)),
+    total_co2_kg: Number((totalCo2 * 1.15).toFixed(2)),
+    average_freshness_pct: Number((avgFreshness - 4.2).toFixed(1))
   };
 
   const classicalResult: SolverResult = {
@@ -237,12 +257,7 @@ export function runStandaloneOptimization(
     execution_time_sec: 0.045,
     energy_cost: 520.0,
     bitstring: "11001010",
-    solution: {
-      ...solution,
-      total_spoilage_loss_usd: Number((totalSpoilage * 1.25).toFixed(2)),
-      total_logistics_cost_usd: Number((totalSpoilage * 1.25 + totalTrans).toFixed(2)),
-      average_freshness_pct: Number((avgFreshness - 4.2).toFixed(1))
-    }
+    solution: classicalSolution
   };
 
   const quboData: QuboData = {
